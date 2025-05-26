@@ -18,3 +18,24 @@ DeviceRegistryEvents
 | where RegistryKey contains @"\Software\Microsoft\Windows\CurrentVersion\Run"
 | where InitiatingProcessFileName in~ ("InstallUtil.exe", "Regsvr32.exe", "rundll32.exe")
 | project TimeGenerated, DeviceName, InitiatingProcessAccountName, RegistryKey, RegistryValueName, RegistryValueData, InitiatingProcessFileName
+
+
+Suspicious Network Scanning via nmap.exe from Standalone Exe
+=============================================================
+// Description:  
+// Detects the execution of nmap.exe from non-system directories to perform network scanning. This may indicate unauthorized reconnaissance or malicious activity using a standalone executable.
+//
+// Action on alert:  
+// Investigate the process context, analyze command-line arguments for intent, and Identify the user account. Check for authority of User and confirm if the TargetIP scanned belongs to critical assets or sensitive infrastructure.
+// 
+// Creator:  
+// Shikha Sangwan  
+//
+// Query:
+DeviceProcessEvents
+| where FileName contains "\nmap.exe"
+| where not(FolderPath startswith @"C:\Windows") // Exclude common system directory
+| where not(FolderPath startswith @"C:\Program Files") // Exclude another common directory
+| where not(FolderPath startswith @"C:\Program Files (x86)") // Exclude 32-bit program folder
+| extend TargetIP = extract(@"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})", 1, ProcessCommandLine)
+| project TimeGenerated, DeviceName, FileName, FolderPath, ProcessCommandLine, TargetIP, InitiatingProcessAccountName
