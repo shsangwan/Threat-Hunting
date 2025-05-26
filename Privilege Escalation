@@ -18,3 +18,91 @@ DeviceProcessEvents
 | where ProcessCommandLine matches regex @"^net\s+user.*\/add.*\/domain"
 | project TimeGenerated, DeviceName, InitiatingProcessAccountName, ProcessCommandLine, FolderPath, FileName
 
+
+Detecting User Account Added to Domain Admins Group
+===================================================
+// Description:  
+// This query searches for commands that add a user account (e.g., "username") to the Domain Admins group, potentially granting significant control over the domain environment. This is a critical security event that requires immediate attention. Most elevated privilege cases should be handled by Entra accounts, and elevating local accounts is unusual.
+//
+// Action on alert:  
+// Immediately verify if the user account addition to the Domain Admins group was intentional and authorized. Check for any anomalies in the process chain and initiating user account. If unauthorized, remove the account from the Domain Admins group, reset its credentials, and perform a comprehensive security audit to assess any potential impacts.  
+//
+// Source:  
+// MITRE ATT&CK®: Account Manipulation - Additional Local or Domain Groups, Sub-technique T1098.007 (https://attack.mitre.org/techniques/T1098/007/)  
+//
+// Creator:  
+// Shikha Sangwan  
+//
+// Query:
+DeviceProcessEvents
+| where ProcessCommandLine contains "net"
+| where ProcessCommandLine contains "group \"Domain Admins\""
+| where ProcessCommandLine contains "/ADD /DOMAIN"
+| project TimeGenerated, DeviceName, InitiatingProcessAccountName, ProcessCommandLine
+
+
+CTH TA0004 - Domain Group Added to Local Administrators Group
+=============================================================
+// Description:  
+// This query detects when a domain group (e.g., "domain\IT-Admins") is added to the local Administrators group, which could be used to elevate privileges across multiple systems. Most elevated privilege cases should be handled by Entra accounts, and elevating local accounts is unusual.
+//
+// Action on alert:  
+// Determine if the addition of the domain group to the Administrators group was an approved change. Review the initiating account and process to ensure it is authorized to do the action. If unauthorized, remove the group from the Administrators group.  
+//
+// Source:  
+// MITRE ATT&CK®: Account Manipulation - Additional Local or Domain Groups, Sub-technique T1098.007 (https://attack.mitre.org/techniques/T1098/007/)  
+//
+// Creator:  
+// Shikha Sangwan  
+//
+// Query:
+DeviceProcessEvents
+| where ProcessCommandLine contains "net"
+| where ProcessCommandLine contains "localgroup Administrators domain\\"
+| where ProcessCommandLine contains "/ADD"
+| project TimeGenerated, DeviceName, InitiatingProcessAccountName, ProcessCommandLine
+
+
+User Account Added to Remote Desktop Users Group
+=================================================
+// Description:  
+// This query looks for commands that add a user account to the "Remote Desktop Users" group, which could grant remote access capabilities to the user. This could be an indicator of lateral movement or preparation for remote access by a threat actor. Most elevated privilege cases should be handled by Entra accounts, and elevating local accounts is unusual.
+//
+// Action on alert:  
+// Confirm whether the addition of User to the Remote Desktop Users group was a legitimate administrative action. Investigate the context of the command, including the initiating process and account. If unauthorized, remove the user from the group and investigate potential security breaches.  
+//
+// Source:  
+// MITRE ATT&CK®: Account Manipulation - Additional Local or Domain Groups, Sub-technique T1098.007 (https://attack.mitre.org/techniques/T1098/007/)  
+//
+// Creator:  
+// Shikha Sangwan  
+//
+// Query:
+DeviceProcessEvents
+| where ProcessCommandLine contains "net"
+| where ProcessCommandLine contains "localgroup \"Remote Desktop Users\" /add"
+| project TimeGenerated, DeviceName, InitiatingProcessAccountName, ProcessCommandLine
+
+
+User Account Added to Local Administrators Group
+================================================
+// Description:  
+// This query looks for instances where a user account is added to the local Administrators group using the net localgroup command. Such actions might indicate an attempt to elevate privileges on a system by adding a user account to an administrative group. Most elevated privilege cases should be handled by Entra accounts, and elevating local accounts is unusual.
+//
+// Action on alert:  
+// Check the initiating process to see if the action was performed by the user or application. In case of application, look for the legitimacy and authorization of the app. In case, if it's from a user, check whether the user is authorized to do it.  
+//
+// Source:  
+// MITRE ATT&CK®: Account Manipulation - Additional Local or Domain Groups, Sub-technique T1098.007 (https://attack.mitre.org/techniques/T1098/007/)  
+//
+// Creator:  
+// Shikha Sangwan  
+//
+// Query:
+DeviceProcessEvents
+| where ProcessCommandLine contains "net"
+| where ProcessCommandLine contains "localgroup Administrators"
+| where ProcessCommandLine contains "/ADD"
+| project TimeGenerated, DeviceName, InitiatingProcessAccountName, ProcessCommandLine
+
+
