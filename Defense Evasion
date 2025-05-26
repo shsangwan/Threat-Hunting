@@ -26,3 +26,28 @@ DeviceFileEvents
     | where TimeGenerated > ago(_timeframe)
 ) on $left.Paths==$right.FolderPath
 | project TimeGenerated, FileName, FolderPath, InitiatingProcessFileName, DeviceName, InitiatingProcessAccountUpn
+
+
+Suspicious Rundll32.exe Execution
+===================================
+// Description:
+// This query detects suspicious usage of rundll32.exe, commonly abused by adversaries to execute malicious code or load DLLs covertly. It checks for unusual command-line patterns, such as rare DLLs (.cdf, DllRegisterServer, comsvcs.dll) and flags (-sta, javascript:, \\share), which may indicate malicious activity.
+//
+// Action on alert:
+// Ensure rundll32.exe is located in a legitimate system directory (C:\Windows\System32). Identify the initiating process and check if the file is signed or not. Analyse the origin of the initiating process.
+//
+// Source:
+// https://www.linkedin.com/pulse/t1218011-rundll32-shahrukh-khan-6w2lf
+// https://medium.com/@Wolverineisstillalive/system-binary-proxy-execution-rundll32-bypass-method-790871e1f2b7
+// https://lolbas-project.github.io/lolbas/Binaries/Rundll32/
+//
+// Creator:
+// Shikha Sangwan
+//
+// QUERY:
+DeviceProcessEvents
+| where FileName == "rundll32.exe"
+| where ProcessCommandLine contains "rundll32" and ProcessCommandLine has_any ('.cdf','DllRegisterServer','cmd.exe',':temp.dll','EntryPoint','\\share','javascript:','w.run','-sta','ADSDLL.dll','comsvcs.dll')
+| project TimeGenerated, DeviceName, FileName, FolderPath, ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessCommandLine
+
+
