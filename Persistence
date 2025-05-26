@@ -1,0 +1,20 @@
+Persistence via Registry Run Key by LOLBins (InstallUtil, Regsvr32, rundll32)
+
+// Description: 
+// Identifies attempts to create or modify Windows "Run" registry keys using LOLBins such as InstallUtil.exe or Regsvr32.exe. These events are indicative of persistence mechanisms where legitimate system tools are leveraged by adversaries to ensure malicious payloads are executed upon system startup.
+// 
+// Action on alert: 
+// Review the created or modified registry values and associated binaries for signs of suspicious or unauthorized persistence. Validate whether the initiating process and executable path are expected or approved for legitimate administrative use. Search for follow-on activity related to credential access, data exfiltration, or lateral movement.
+// 
+// Source: 
+//  https://www.seqrite.com/blog/snakekeylogger-a-multistage-info-stealer-malware-campaign/
+// 
+// Creator: 
+// Shikha Sangwan 
+// 
+// QUERY:
+
+DeviceRegistryEvents
+| where RegistryKey contains @"\Software\Microsoft\Windows\CurrentVersion\Run"
+| where InitiatingProcessFileName in~ ("InstallUtil.exe", "Regsvr32.exe", "rundll32.exe")
+| project TimeGenerated, DeviceName, InitiatingProcessAccountName, RegistryKey, RegistryValueName, RegistryValueData, InitiatingProcessFileName
