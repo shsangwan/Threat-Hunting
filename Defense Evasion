@@ -1,0 +1,28 @@
+Multiple Suspicious Temp Executables Linked to ACR Stealer
+==========================================================
+// Description:  
+// Detects devices that have more than one suspicious executable in the user's Temp directory matching a pattern observed in ACR stealer. The files are named with 10 uppercase characters and an .exe extension, e.g. "QQWSHIIISH.exe". Multiple files matching this pattern are dropped by the stealer. This may indicating potential malware presence or activity.
+//
+// Action on alert:  
+// Investigate the detected files by analyzing their SHA256 hashes and checking in VT. Review initiating processes and validate the legitimacy of it. See from where the initiating file has come and verify whether it was a phishing website.
+// 
+// Creator:  
+// Shikha Sangwan  
+//
+// Query:
+let _timeframe = 40m;
+DeviceFileEvents
+| where TimeGenerated > ago(_timeframe)
+| where FolderPath matches regex @"^C:\\Users\\[a-zA-Z0-9_-]+\\AppData\\Local\\Temp\\[A-Z]{10}\.exe$"
+// Find devices with multiple files matching the suspicious pattern
+| summarize Paths = make_set(FolderPath, 50), FolderPathCount = dcount(FolderPath) by DeviceName
+| where FolderPathCount > 1
+// Split out each file to an individual row
+| mv-expand Paths
+| extend Paths = tostring(Paths)
+// Most fields have been lost in the summarize operator; populate them again by joining to the same table
+| join kind=inner (
+    DeviceFileEvents
+    | where TimeGenerated > ago(_timeframe)
+) on $left.Paths==$right.FolderPath
+| project TimeGenerated, FileName, FolderPath, InitiatingProcessFileName, DeviceName, InitiatingProcessAccountUpn
