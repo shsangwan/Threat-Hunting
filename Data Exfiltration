@@ -19,3 +19,29 @@ DeviceFileEvents
 | where FileName in (CredFiles)
 | where InitiatingProcessFileName in~ ("InstallUtil.exe", "Regsvr32.exe", "rundll32.exe")
 | project TimeGenerated, DeviceName, FileName, InitiatingProcessFileName, InitiatingProcessAccountName
+
+
+Suspicious Rclone and Rsync Activity
+
+// Description:
+// This query detects activity related to rclone tool or process associated with Rsync. Both rclone and Rsync are legitimate tools commonly used for file synchronization and transfer. However, their presence or activity may also indicate potential data exfiltration or unauthorized file tansfers.
+//
+// Action on alert:
+// Analyze the data tansfer activity associated with these processes. Look for large or unusual data transfers that might indicate data exfiltration. Check if the rclone and Rsync are signed. 
+//
+// Source:
+// https://osintteam.blog/the-ultimate-black-basta-chat-leak-part-2-veeam-confluence-8b766c2182ac
+// https://go.intel471.com/hubfs/Emerging%20Threats/Emerging%20Threat%20-%20Black%20Basta%20-%20March%202025.pdf?utm_campaign=Emerging%20Threats&utm_content=326489969&utm_medium=social&utm_source=linkedin&hss_channel=lcp-3744600
+// https://www.security.com/threat-intelligence/ransomware-data-exfiltration
+//
+// Creator:
+// Shikha Sangwan
+//
+// QUERY:
+DeviceProcessEvents 
+| where ProcessVersionInfoOriginalFileName contains "rclone" or FileName contains "rclone" or ProcessVersionInfoFileDescription contains "Rsync" 
+| where not(ProcessVersionInfoFileDescription in~ ("OutlookGoogleCalendarSync", 'DirSync MFC Application')) 
+| where FileName != "RcloneBrowser.exe" 
+| project TimeGenerated, AccountDomain, AccountName, FileName, FolderPath, ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessCommandLine, AdditionalFields
+
+
