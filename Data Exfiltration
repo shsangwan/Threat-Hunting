@@ -45,3 +45,25 @@ DeviceProcessEvents
 | project TimeGenerated, AccountDomain, AccountName, FileName, FolderPath, ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessCommandLine, AdditionalFields
 
 
+DNS Data Exfiltration via Encoded Query Strings (nslookup.exe)
+==============================================================
+// Description: 
+// This query detects executions of nslookup.exe where its command line arguments contain long base64-like strings. Such usage indicates potential data exfiltration over DNS channels—a common attacker technique for bypassing standard network controls. Adversaries may encode sensitive information into DNS queries using living-off-the-land binaries like nslookup.exe.
+// 
+// Action on alert: 
+// Review the command line arguments for encoded or suspicious data; attempt to decode if feasible to see what was transmitted. Correlate with DeviceNetworkEvents to determine external DNS destinations and possible data egress volume. Investigate the parent process and user account, for compromise.
+// 
+// Source: 
+// https://cribl.io/blog/using-cribl-to-detect-data-exfil-over-dns-logs-in-real-time/
+// 
+// Creator: 
+// Shikha Sangwan 
+// 
+// QUERY:
+DeviceProcessEvents
+| where FileName == "nslookup.exe"
+| where ProcessCommandLine matches regex @"[A-Za-z0-9+]{20,}=" // Looks for long base64-like tokens
+| project TimeGenerated, DeviceName, AccountUpn, FileName, ProcessCommandLine, InitiatingProcessFileName, FolderPath
+| limit 100
+
+
