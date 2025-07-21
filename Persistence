@@ -64,9 +64,9 @@ DeviceEvents
 | extend DecodedCommand = tostring(base64_decode_tostring(extract(@'EncodedCommand\s([^\s]+)', 1, Arguments)))
 | project TimeGenerated, DeviceName, InitiatingProcessAccountName, Arguments, DecodedCommand
 
-
-Suspicious Windows Utilities Executed by IIS Worker Process (w3wp.exe)
-=======================================================================
+==============================================================================================================
+Server Software Component (Web Shell) - Suspicious Windows Utilities Executed by IIS Worker Process (w3wp.exe)
+==============================================================================================================
 // Description:
 // This query identifies instances where the IIS web server process (w3wp.exe) launches potentially suspicious Windows command-line utilities. Such activity is unusual in standard web server operations and may indicate exploitation via a web shell or unauthorized code execution. The detection focuses on a curated list of tools commonly leveraged by attackers.
 //
@@ -89,7 +89,26 @@ DeviceProcessEvents
 | where not(ProcessCommandLine has_any ('CyberArk', 'rdpsign'))
 | project TimeGenerated, DeviceName, InitiatingProcessParentFileName, InitiatingProcessFileName, FileName, ProcessCommandLine, InitiatingProcessCommandLine, AccountName, FolderPath
 
-
-
+====================================================================
+Create Account: Domain Account - Domain Account Creation via net.exe
+====================================================================
+// Description:  
+// Detects the creation of new domain user accounts by monitoring for the execution of net.exe user <username> <password> /add /domain on Windows systems. Attackers with sufficient privileges may use this technique to establish persistence or escalate privileges within an Active Directory environment.
+//
+// Action on alert:  
+// Verify whether the initiating user and device are authorized to perform domain account creation. Check if the created account and associated credentials are expected. If unauthorized or suspicious, disable the newly created account and investigate the source system for further compromise. It is likely this request failed and the account was not created, but the fact the command was run may indicate an attacker on the machine. You can check if the account was successfully created using an on-prem directory explorer such as ADExplorer.
+//
+// Source:  
+// https://attack.mitre.org/techniques/T1136/002/
+// https://www.microsoft.com/en-us/security/blog/2022/09/07/profiling-dev-0270-phosphorus-ransomware-operations/
+// https://medium.com/@RootRouteway/hacking-active-directory-from-reconnaissance-to-exploitation-part-2-f2630b836e73
+//
+// Creator:  
+// Shikha Sangwan  
+//
+DeviceProcessEvents
+| where FileName contains "net.exe"
+| where ProcessCommandLine matches regex @"^net\s+user.*\/add.*\/domain"
+| project TimeGenerated, DeviceName, InitiatingProcessAccountName, ProcessCommandLine, FolderPath, FileName
 
 
