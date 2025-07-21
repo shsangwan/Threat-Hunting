@@ -210,3 +210,29 @@ DeviceProcessEvents
 | where ProcessCommandLineToLower has "wevtutil.exe" and ProcessCommandLineToLower has_any ("cl", "clear-log")
 | project-reorder TimeGenerated, DeviceName, AccountSid, ProcessCommandLine, InitiatingProcessCommandLine 
 | limit 100
+
+===================================================================================
+MSBuild - Suspicious network connection from MSBuild executing without command line
+===================================================================================
+// Description:
+// Adveraries abuse MSBuild to avoid detection. This query looks for MSBuild executing without a command line, as observed in an attack chain from by RedCanary, and then making a network connection. 
+//
+// Action on alert:
+// Check for the source and behaviour of MSBuild execution. Review the associated network activity for suspicious connections.
+//
+// Source:
+// https://redcanary.com/blog/msix-installers/
+//
+// Creator:
+// Shikha Sangwan
+//
+// QUERY:
+DeviceNetworkEvents
+| where InitiatingProcessFileName =~ "msbuild.exe"
+| where isempty(InitiatingProcessCommandLine) or InitiatingProcessCommandLine =~ "msbuild.exe"
+| project TimeGenerated, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, RemoteIP, RemotePort, Protocol
+| limit 100
+
+
+
+
