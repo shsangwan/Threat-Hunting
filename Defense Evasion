@@ -1,5 +1,6 @@
-Multiple Suspicious Temp Executables Linked to ACR Stealer
-==========================================================
+============================================================================================
+Obfuscated Files or Information - Multiple Suspicious Temp Executables Linked to ACR Stealer
+============================================================================================
 // Description:  
 // Detects devices that have more than one suspicious executable in the user's Temp directory matching a pattern observed in ACR stealer. The files are named with 10 uppercase characters and an .exe extension, e.g. "QQWSHIIISH.exe". Multiple files matching this pattern are dropped by the stealer. This may indicating potential malware presence or activity.
 //
