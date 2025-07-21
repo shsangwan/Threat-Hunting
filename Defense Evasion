@@ -125,3 +125,28 @@ DeviceProcessEvents
 | where FileName contains "notepad.exe"
 | where ProcessIntegrityLevel has 'system'
 | project TimeGenerated, AccountDomain, DeviceName, AccountUpn, ProcessIntegrityLevel, FileName, FolderPath
+
+==================================================================================
+Disable or Modify System Firewall - Windows Firewall Profile Registry Modification
+==================================================================================
+// Description:
+// This query monitors registry events related to changes in Windows Firewall profiles, specifically targeting the StandardProfile, DomainProfile, and PublicProfile registry keys. These keys are critical for configuring and managing firewall settings. GloballyOpenPorts under StandardProfile and DomainProfile are used to enable ports and PublicProfile is used to disable Firewall.
+//
+// Action on alert:
+// Examine the initiating process responsible for regitry modification. Check whether the process is legitimate or not. Review the RegistryValueName and RegistryValueData to understand what specific changes were made to the firewall profiles. Determine if these changes could weaken security or allow unauthorized network access. Allowlist if legitimate.
+//
+// Source:
+// https://www.cisa.gov/news-events/alerts/2018/03/15/russian-government-cyber-activity-targeting-energy-and-other-critical-infrastructure-sectors
+//https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1562.004/T1562.004.md#atomic-test-1---disable-microsoft-defender-firewall
+//
+// Creator:
+// Shikha Sangwan
+//
+// QUERY:
+DeviceRegistryEvents
+| where RegistryKey has_any (@"Services\SharedAccess\Parameters\FirewallPolicy\StandardProfile", @"Services\SharedAccess\Parameters\FirewallPolicy\DomainProfile", @"Services\SharedAccess\Parameters\FirewallPolicy\PublicProfile")
+// Allowlist
+| where InitiatingProcessCommandLine !contains "LocalServiceNoNetworkFirewall"
+| where RegistryKey !contains "AuthorizedApplications"
+| project TimeGenerated, DeviceName, RegistryKey, RegistryValueName, RegistryValueData, InitiatingProcessAccountDomain, InitiatingProcessCommandLine
+| limit 100
