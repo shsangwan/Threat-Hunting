@@ -150,3 +150,41 @@ DeviceRegistryEvents
 | where RegistryKey !contains "AuthorizedApplications"
 | project TimeGenerated, DeviceName, RegistryKey, RegistryValueName, RegistryValueData, InitiatingProcessAccountDomain, InitiatingProcessCommandLine
 | limit 100
+
+=================================================================================
+Disable or Modify System Firewall - Disable or Modify System Firewall using netsh
+==================================================================================
+// Description:
+// This alert is triggered when there are process creation events involving the usage of the netsh command to modify the Windows firewall settings. The query specifically looks for commands that either, Disable the firewall and Add, delete, or set firewall rules that specify a local port. Additionally, the alert filters out known legitimate applications to reduce false positives. The alert is designed to detect potential malicious activity where an attacker may be attempting to modify firewall settings to bypass network security controls.
+//
+// Action on alert:
+// Investigate the registry modification to verify its legitimacy. Review the initiating process and command line for any suspicious activity. If the modification is unauthorized or malicious, investigate the timeline to determine if the binary that initiated the change is malicious. Allowlist if false positive.
+// When this alert is triggered, immediately investigate the details to determine legitimacy. If confirmed malicious, isolate the device, disable the compromised account, and revert any unauthorized firewall changes. Document the incident and notify the security team.
+//
+// Source:
+// https://thedfirreport.com/2022/03/21/phosphorus-automates-initial-access-using-proxyshell/
+// https://www.cisa.gov/news-events/alerts/2018/03/15/russian-government-cyber-activity-targeting-energy-and-other-critical-infrastructure-sectors
+//
+// Creator:
+// Shikha Sangwan
+//
+// QUERY:
+let alwaysIncludeNetshCommands = dynamic([
+"advfirewall set allprofiles state on",
+"advfirewall set allprofiles state off",
+"firewall add allowedprogram",
+"firewall delete allowedprogram",
+"firewall set opmode disable"]);
+let conditionalNetshCommands = dynamic([
+"advfirewall firewall add rule",
+"advfirewall firewall delete rule",
+"advfirewall firewall set rule"]);
+DeviceProcessEvents
+| where ProcessCommandLine has "netsh"
+| extend CommandLine = ProcessCommandLine
+| where (CommandLine has_any(alwaysIncludeNetshCommands)) or (CommandLine has_any(conditionalNetshCommands) and CommandLine has "localport")
+//Allowlist
+| where CommandLine !contains ("WDS")
+| where CommandLine !contains ("Relax")
+| where CommandLine !contains ("HPDM")
+| project-reorder TimeGenerated, DeviceName, AccountUpn, CommandLine, AccountDomain, FileName, InitiatingProcessFileName, InitiatingProcessFolderPath, ProcessVersionInfoProductName
