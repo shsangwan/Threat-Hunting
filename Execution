@@ -1,0 +1,21 @@
+==================================================================================
+Scheduled Task/Job: Scheduled Task - Encoded Command Execution via Scheduled Tasks
+==================================================================================
+// Description:  
+// This query detects suspicious scheduled task creation or execution that uses obfuscated PowerShell commands (-EncodedCommand). Attackers use this technique to execute malicious payloads or maintain persistence.
+//
+// Action on alert:  
+// Analyze the decoded payload to determine its nature. Investigate the initiating account and device context. If malicious, disable the task and block or isolate the affected device.  
+//
+// Source:  
+// https://cybersecuritynews.com/chinese-salt-typhoon-hackers-exploiting-exchange-vulnerabilities/
+//
+// Creator:  
+// Shikha Sangwan  
+//
+DeviceEvents
+| where ActionType == "ScheduledTaskCreated"
+| extend Arguments = tostring(parse_json(tostring(AdditionalFields["TaskContent"]))["Actions"]["Exec"]["Arguments"])
+| where Arguments contains "-EncodedCommand"
+| extend DecodedCommand = tostring(base64_decode_tostring(extract(@'EncodedCommand\s([^\s]+)', 1, Arguments)))
+| project TimeGenerated, DeviceName, InitiatingProcessAccountName, Arguments, DecodedCommand
