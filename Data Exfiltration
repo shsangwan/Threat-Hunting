@@ -1,5 +1,6 @@
-Suspicious Rclone and Rsync Activity
-====================================
+=============================================================================
+Exfiltration Over Alternative Protocol - Suspicious Rclone and Rsync Activity
+=============================================================================
 // Description:
 // This query detects activity related to rclone tool or process associated with Rsync. Both rclone and Rsync are legitimate tools commonly used for file synchronization and transfer. However, their presence or activity may also indicate potential data exfiltration or unauthorized file tansfers.
 //
