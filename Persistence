@@ -1,5 +1,6 @@
-Persistence via Registry Run Key by LOLBins (InstallUtil, Regsvr32, rundll32)
-===============================================================================
+=====================================================================================================================================================
+Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder - Persistence via Registry Run Key by LOLBins (InstallUtil, Regsvr32, rundll32)
+=====================================================================================================================================================
 // Description: 
 // Identifies attempts to create or modify Windows "Run" registry keys using LOLBins such as InstallUtil.exe or Regsvr32.exe. These events are indicative of persistence mechanisms where legitimate system tools are leveraged by adversaries to ensure malicious payloads are executed upon system startup.
 // 
