@@ -1,3 +1,4 @@
+===================================================================
 Protocol Tunneling - Detection of ngrok.exe Execution on Endpoint
 ===================================================================
 // Description:
@@ -18,4 +19,25 @@ DeviceProcessEvents
 | where FileName =~ "ngrok.exe"
 | project TimeGenerated, DeviceName, AccountName, FileName, FolderPath, ProcessCommandLine, InitiatingProcessFileName
 
+=========================================================================
+Ingress Tool Transfer - Suspicious .bpx file download in Downloads folder
+=========================================================================
+// Description:
+// This query identifies .bpx file downloads from commercial cloud storage providers, which are often abused for malware distribution. The following were the downloaded files from the blog: C:\Users\<user>\Downloads\kb052117-01.bpx C:\Users\<user>\Downloads\kb052123-02.bpx
+//
+// Action on alert:
+// Analyze the .bpx file for unusual activity. Verify file integrity using SHA256 against known malware hashes. Check whether the .bpx files are getting compressed later into a ZIP file. Verify the source of .bpx file.
+//
+// Source:
+// https://www.trendmicro.com/en_us/research/25/b/black-basta-cactus-ransomware-backconnect.html
+//
+// Creator:
+// Shikha Sangwan
+//
+// QUERY:
+DeviceFileEvents
+| where FileName endswith ".bpx"
+| where FolderPath contains @"\downloads\"
+| project TimeGenerated, InitiatingProcessAccountUpn ,DeviceName, FileName, FolderPath, InitiatingProcessFileName, SHA256
+| limit 100
 
