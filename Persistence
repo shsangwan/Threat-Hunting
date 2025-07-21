@@ -62,3 +62,33 @@ DeviceEvents
 | where Arguments contains "-EncodedCommand"
 | extend DecodedCommand = tostring(base64_decode_tostring(extract(@'EncodedCommand\s([^\s]+)', 1, Arguments)))
 | project TimeGenerated, DeviceName, InitiatingProcessAccountName, Arguments, DecodedCommand
+
+
+Suspicious Windows Utilities Executed by IIS Worker Process (w3wp.exe)
+=======================================================================
+// Description:
+// This query identifies instances where the IIS web server process (w3wp.exe) launches potentially suspicious Windows command-line utilities. Such activity is unusual in standard web server operations and may indicate exploitation via a web shell or unauthorized code execution. The detection focuses on a curated list of tools commonly leveraged by attackers.
+//
+// Action on alert:
+// Examine the parent and child processes to determine if the execution chain is expected or anomalous. Analyze the full command line for signs of exploitation, such as references to unfamiliar scripts or directories. Check network activity for suspicious HTTP requests or file uploads in case their suspicious script involved.
+//
+// Source:
+// https://github.com/nsacyber/Mitigating-Web-Shells
+//
+// Creator:
+// Shikha Sangwan
+//
+// QUERY:
+//
+let suspicious_tools = dynamic(["arp.exe", "at.exe", "bitsadmin.exe", "certutil.exe", "cmd.exe", "dsget.exe", "dsquery.exe", "find.exe", "findstr.exe", "fsutil.exe", "hostname.exe", "ipconfig.exe", "nbstat.exe", "net.exe", "net1.exe", "netdom.exe", "netsh.exe", "netstat.exe", "nltest.exe", "nslookup.exe", "ntdsutil.exe", "pathping.exe", "ping.exe", "powershell.exe", "qprocess.exe", "query.exe", "qwinsta.exe", "reg.exe", "rundll32.exe", "sc.exe", "schtasks.exe", "systeminfo.exe", "tasklist.exe", "tracert.exe", "ver.exe", "vssadmin.exe", "wevtutil.exe", "whoami.exe", "wmic.exe", "wusa.exe"
+]);
+DeviceProcessEvents
+| where InitiatingProcessFileName in~ ('w3wp.exe')
+| where FileName in~ (suspicious_tools)
+| where not(ProcessCommandLine has_any ('CyberArk', 'rdpsign'))
+| project TimeGenerated, DeviceName, InitiatingProcessParentFileName, InitiatingProcessFileName, FileName, ProcessCommandLine, InitiatingProcessCommandLine, AccountName, FolderPath
+
+
+
+
+
