@@ -188,3 +188,25 @@ DeviceProcessEvents
 | where CommandLine !contains ("Relax")
 | where CommandLine !contains ("HPDM")
 | project-reorder TimeGenerated, DeviceName, AccountUpn, CommandLine, AccountDomain, FileName, InitiatingProcessFileName, InitiatingProcessFolderPath, ProcessVersionInfoProductName
+
+==============================================================
+Clear Windows Event Logs - Event Log Clearing via Wevtutil.exe
+==============================================================
+// Description:
+// This query detects the use of the wevtutil.exe utility to clear event logs, which is a common tactic used by threat actors to cover their tracks and erase evidence of their activities. The query looks for process command lines that include "wevtutil.exe" along with commands like "cl" or "clear-log".
+//
+// Action on Alert:
+// Investigate the source and intent of the wevtutil.exe execution, review the source file and associated account's recent activities. Allowlist if false positive.
+// 
+// Source:
+// https://denwp.com/unexplored-lolbas-technique-wevtutil-exe/
+// 
+// Creator:
+// Shikha Sangwan
+//
+// QUERY:
+DeviceProcessEvents
+| extend ProcessCommandLineToLower =  tolower(ProcessCommandLine)
+| where ProcessCommandLineToLower has "wevtutil.exe" and ProcessCommandLineToLower has_any ("cl", "clear-log")
+| project-reorder TimeGenerated, DeviceName, AccountSid, ProcessCommandLine, InitiatingProcessCommandLine 
+| limit 100
