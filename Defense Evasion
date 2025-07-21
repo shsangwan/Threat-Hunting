@@ -51,3 +51,55 @@ DeviceProcessEvents
 | project TimeGenerated, DeviceName, FileName, FolderPath, ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessCommandLine
 
 
+==========================================================================================================
+Obfuscated Files or Information: Compile After Delivery - Suspicious On-Host Compilation from User Folders
+==========================================================================================================
+// Description:
+// Detects use of C# or C/C++ compilers compiling source code from user-writable or temporary directories (Downloads, AppData, Temp, etc.). This behavior is rare for legitimate software and can indicate "Compile After Delivery" techniques used by malware to evade detection by compiling payloads directly on the endpoint. The first 'where' clause below specifically detects activity detailed in linked intelligence: use of csc.exe to compile C# source dropped in AppData\Roaming\Microsoft\ (used by Cardinal RAT). The second branch is an *experimental hunt*: it flags use of common C-family compilers compiling from user-writable or temp folders, while excluding known IDE or common dev tool paths (e.g., Visual Studio, JetBrains, MinGW, MSYS2). To our knowledge, most real attack chains will still use legitimate compilers, but may attempt to evade by executing outside Program Files. This hunt is included to potentially discover new or rare attacker techniques, and may generate false positives, especially in developer-heavy or research environments. Please review and tune to your environment.
+//
+// Action on alert:
+// Check if the activity is expected on this endpoint (e.g., not a developer machine). Review the command line, parent process, and file paths. Retrieve and analyze source and output files if possible. Investigate how the source file was delivered (e.g., phishing, web download, macro).
+//
+// Source:
+// https://unit42.paloaltonetworks.com/unit42-cardinal-rat-active-two-years/
+//
+// Creator:
+// Shikha Sangwan
+//
+// QUERY:
+//
+let cFamilyCompilers = dynamic([
+    "gcc.exe", "g++.exe", "clang.exe", "clang++.exe",
+    "mingw32-gcc.exe", "mingw32-g++.exe",
+    "x86_64-w64-mingw32-gcc.exe", "x86_64-w64-mingw32-g++.exe",
+    "cc.exe"
+]);
+let cFamilySourceExtensions = dynamic([".c", ".cpp", ".cxx", ".cc"]);
+let suspiciousUserLocations = dynamic([
+    @"\AppData\Local\Temp\",
+    @"\AppData\LocalLow\Temp\",
+    @"\AppData\Roaming\",
+    @"\Downloads\",
+    @"\Temporary Internet Files\",
+    @"C:\Windows\Temp\",
+    @"C:\Temp\"
+]);
+DeviceProcessEvents
+| where
+    ( FileName =~ "csc.exe"
+      and ProcessCommandLine has ".cs"
+      and ProcessCommandLine has @"AppData\Roaming\Microsoft\" )
+    or
+    (FileName in~ (cFamilyCompilers)
+        and ProcessCommandLine has_any (cFamilySourceExtensions)
+        and ( ProcessCommandLine has_any (suspiciousUserLocations)
+              or ProcessCommandLine matches regex @"C:\\Users\\[^\\]+\\(Downloads|Desktop|Documents|AppData)\\" )
+        and not (InitiatingProcessFolderPath has_any (
+            @"Microsoft Visual Studio\",
+            @"JetBrains\",
+            @"MinGW\bin",
+            @"MSYS2\",
+            @"\Program Files\")
+        )
+    )
+| project TimeGenerated, DeviceName, AccountName, InitiatingProcessFileName, InitiatingProcessFolderPath, InitiatingProcessCommandLine, FileName, ProcessCommandLine, InitiatingProcessAccountName
