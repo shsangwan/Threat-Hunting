@@ -233,6 +233,28 @@ DeviceNetworkEvents
 | project TimeGenerated, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, RemoteIP, RemotePort, Protocol
 | limit 100
 
-
-
+====================================================
+MSBuild - MSBuild Abuse for Malicious Code Execution
+====================================================
+// Description:
+// MSBuild gets abused to compile and execute malicious code to bypass execution controls, such as application allowlists. This query looks for MSBuild getting invoked by cmd or powershell, which is unusual, and used to compile csproj or proj files, which is normal behaviour.
+//
+// Action on alert:
+// Check for the source of the powershell or cmd script invoking MSBuild. This is more suspicious if coming from a file than if powershell was started by the user previously. Check the execution behaviour of compiled file. Check for unusual network communications from either msbuild.exe or from the file. Allowlist if legitimate.
+//
+// Source:
+// https://cyble.com/blog/tiny-backdoor-goes-undetected-suspected-turla-leveraging-msbuild-to-evade-detection/
+// https://isc.sans.edu/diary/28180
+//
+// Creator:
+// Shikha Sangwan
+//
+// QUERY:
+DeviceProcessEvents
+| where FileName =~ "msbuild.exe"
+| where ProcessCommandLine has_any ("csproj", "proj")
+| where InitiatingProcessVersionInfoInternalFileName has_any ('powershell', 'cmd')
+| where AccountName !contains "svc"
+| project TimeGenerated, DeviceName, AccountName, FileName, FolderPath, ProcessCommandLine, InitiatingProcessVersionInfoInternalFileName, InitiatingProcessCommandLine
+| limit 100
 
