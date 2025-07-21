@@ -1,5 +1,6 @@
-Domain Account Creation via net.exe
-====================================   
+=====================================================================
+Create Account (Domain Account) - Domain Account Creation via net.exe
+=====================================================================
 // Description:  
 // Detects the creation of new domain user accounts by monitoring for the execution of net.exe user <username> <password> /add /domain on Windows systems. Attackers with sufficient privileges may use this technique to establish persistence or escalate privileges within an Active Directory environment.
 //
