@@ -28,9 +28,9 @@ DeviceFileEvents
 ) on $left.Paths==$right.FolderPath
 | project TimeGenerated, FileName, FolderPath, InitiatingProcessFileName, DeviceName, InitiatingProcessAccountUpn
 
-
-Suspicious Rundll32.exe Execution
-===================================
+=================================================================
+System Binary Proxy Execution - Suspicious Rundll32.exe Execution
+=================================================================
 // Description:
 // This query detects suspicious usage of rundll32.exe, commonly abused by adversaries to execute malicious code or load DLLs covertly. It checks for unusual command-line patterns, such as rare DLLs (.cdf, DllRegisterServer, comsvcs.dll) and flags (-sta, javascript:, \\share), which may indicate malicious activity.
 //
