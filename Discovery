@@ -21,4 +21,26 @@ DeviceProcessEvents
 | project TimeGenerated, DeviceName, FileName, FolderPath, ProcessCommandLine, TargetIP, InitiatingProcessAccountName
 | limit 100
 
-
+=================================================================================
+System Time Discovery - Suspicious Local Time Lookup Using Net for Reconnaissance
+=================================================================================
+// Description:
+// Checking for file that will perform local time lookups using net utility. Threat actors gather time as part of their reconnaissance activity. This query specifically looks for "net time" command executed from a file not from the cmd.exe. 
+//
+// Action on alert:
+// Check what the file is, what it was installed by, and whether it is signed. Check any further actions done by the file. 
+// 
+// Source:
+// https://www.cybereason.com/blog/operation-cuckoobees-deep-dive-into-stealthy-winnti-techniques
+// https://web.archive.org/web/20170718174931/https://www.melani.admin.ch/dam/melani/de/dokumente/2016/technical%20report%20ruag.pdf.download.pdf/Report_Ruag-Espionage-Case.pdf
+//
+// Creator:
+// Shikha Sangwan
+//
+// QUERY:
+DeviceProcessEvents
+| where ProcessCommandLine contains " time " and ProcessCommandLine startswith "net "
+| where not(InitiatingProcessCommandLine matches regex @"^""cmd\.exe""\s*$")
+| where ProcessCommandLine !contains "/set"
+| project TimeGenerated, AccountName, DeviceName, ProcessCommandLine, FileName, InitiatingProcessCommandLine, InitiatingProcessFileName
+| limit 100
