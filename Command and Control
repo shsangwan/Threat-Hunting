@@ -1,0 +1,21 @@
+Protocol Tunneling - Detection of ngrok.exe Execution on Endpoint
+===================================================================
+// Description:
+// This query identifies any execution of the ngrok.exe process on devices. ngrok is a tunneling tool that allows remote access to local services and is often used legitimately by developers, but can also be misused by threat actors to bypass network policies and establish unauthorized external access. In the context of the Pay2Key campaign, ngrok was explicitly used as a "Connection Proxy" to create reverse tunnels for command and control.
+//
+// Action on alert:
+// If ngrok.exe process execution is observed, it may indicate active or prior compromise with possible C2 tunneling. Investigate the host, user, and process chain for unauthorized remote access activity.If the use of ngrok is required for legitimate development work, ask the team to officially raise a software exception. In such cases, this detection query should be removed.
+//
+// Source:
+// https://www.clearskysec.com/wp-content/uploads/2020/12/Pay2Kitten.pdf
+//
+// Creator:
+// Shikha Sangwan
+//
+// QUERY:
+//
+DeviceProcessEvents
+| where FileName =~ "ngrok.exe"
+| project TimeGenerated, DeviceName, AccountName, FileName, FolderPath, ProcessCommandLine, InitiatingProcessFileName
+
+
