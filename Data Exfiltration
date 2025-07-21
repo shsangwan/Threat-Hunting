@@ -45,8 +45,9 @@ DeviceProcessEvents
 | project TimeGenerated, AccountDomain, AccountName, FileName, FolderPath, ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessCommandLine, AdditionalFields
 
 
-DNS Data Exfiltration via Encoded Query Strings (nslookup.exe)
-==============================================================
+==================================================================================================================================================================
+Exfiltration Over Alternative Protocol (Exfiltration Over Unencrypted/Obfuscated Non-C2 Protocol) - DNS Data Exfiltration via Encoded Query Strings (nslookup.exe)
+==================================================================================================================================================================
 // Description: 
 // This query detects executions of nslookup.exe where its command line arguments contain long base64-like strings. Such usage indicates potential data exfiltration over DNS channels—a common attacker technique for bypassing standard network controls. Adversaries may encode sensitive information into DNS queries using living-off-the-land binaries like nslookup.exe.
 // 
