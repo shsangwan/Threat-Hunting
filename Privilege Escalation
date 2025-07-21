@@ -19,9 +19,9 @@ DeviceProcessEvents
 | where ProcessCommandLine matches regex @"^net\s+user.*\/add.*\/domain"
 | project TimeGenerated, DeviceName, InitiatingProcessAccountName, ProcessCommandLine, FolderPath, FileName
 
-
-Detecting User Account Added to Domain Admins Group
-===================================================
+================================================================
+Account Manipulation - User Account Added to Domain Admins Group
+================================================================
 // Description:  
 // This query searches for commands that add a user account (e.g., "username") to the Domain Admins group, potentially granting significant control over the domain environment. This is a critical security event that requires immediate attention. Most elevated privilege cases should be handled by Entra accounts, and elevating local accounts is unusual.
 //
@@ -41,9 +41,9 @@ DeviceProcessEvents
 | where ProcessCommandLine contains "/ADD /DOMAIN"
 | project TimeGenerated, DeviceName, InitiatingProcessAccountName, ProcessCommandLine
 
-
-CTH TA0004 - Domain Group Added to Local Administrators Group
-=============================================================
+=======================================================================
+Account Manipulation - Domain Group Added to Local Administrators Group
+=======================================================================
 // Description:  
 // This query detects when a domain group (e.g., "domain\IT-Admins") is added to the local Administrators group, which could be used to elevate privileges across multiple systems. Most elevated privilege cases should be handled by Entra accounts, and elevating local accounts is unusual.
 //
@@ -63,9 +63,9 @@ DeviceProcessEvents
 | where ProcessCommandLine contains "/ADD"
 | project TimeGenerated, DeviceName, InitiatingProcessAccountName, ProcessCommandLine
 
-
-User Account Added to Remote Desktop Users Group
-=================================================
+=======================================================================
+Account Manipulation - User Account Added to Remote Desktop Users Group
+=======================================================================
 // Description:  
 // This query looks for commands that add a user account to the "Remote Desktop Users" group, which could grant remote access capabilities to the user. This could be an indicator of lateral movement or preparation for remote access by a threat actor. Most elevated privilege cases should be handled by Entra accounts, and elevating local accounts is unusual.
 //
@@ -84,9 +84,9 @@ DeviceProcessEvents
 | where ProcessCommandLine contains "localgroup \"Remote Desktop Users\" /add"
 | project TimeGenerated, DeviceName, InitiatingProcessAccountName, ProcessCommandLine
 
-
-User Account Added to Local Administrators Group
-================================================
+=======================================================================
+Account Manipulation - User Account Added to Local Administrators Group
+=======================================================================
 // Description:  
 // This query looks for instances where a user account is added to the local Administrators group using the net localgroup command. Such actions might indicate an attempt to elevate privileges on a system by adding a user account to an administrative group. Most elevated privilege cases should be handled by Entra accounts, and elevating local accounts is unusual.
 //
