@@ -14,7 +14,7 @@ Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder - Persiste
 // Shikha Sangwan 
 // 
 // QUERY:
-
+//
 DeviceRegistryEvents
 | where RegistryKey contains @"\Software\Microsoft\Windows\CurrentVersion\Run"
 | where InitiatingProcessFileName in~ ("InstallUtil.exe", "Regsvr32.exe", "rundll32.exe")
