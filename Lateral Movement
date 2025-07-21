@@ -1,0 +1,22 @@
+Remote Services (Remote Desktop Protocol) -  Pink Sandstorm Using Plink Tunnel Renamed to systems.exe
+=======================================================================================================
+// Description:
+// This query detects threat group Pink Sandstorm executing a Plink tunneling tool renamed to systems.exe, with tunneling-related command line arguments (-L, -R, -pw). This group has been observed using Plink to establish remote tunnels and enable lateral movement or data exfiltration. The presence of these flags strongly suggests SSH-based port forwarding, which is rarely legitimate on endpoints.
+//
+// Action on alert:
+// Review the full process tree (parent/child/grandparent processes) for signs of exploitation (e.g., look for web server or IT tool processes triggering this event). Check command line parameters for remote IP addresses, credentials, and tunnel destinations. Identify any established tunnels and block them at the firewall if malicious.
+//
+// Source:
+// https://unit42.paloaltonetworks.com/agonizing-serpens-targets-israeli-tech-higher-ed-sectors/
+//
+// Creator:
+// Shikha Sangwan
+//
+// QUERY:
+//
+DeviceProcessEvents
+| where FileName =~ "systems.exe"
+| where ProcessCommandLine has_any("-L", "-R", "-pw")
+| project TimeGenerated, DeviceName, AccountName, FileName, FolderPath, ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessParentFileName, InitiatingProcessAccountName
+
+
