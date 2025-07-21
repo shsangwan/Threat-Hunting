@@ -104,3 +104,24 @@ DeviceProcessEvents
         )
     )
 | project TimeGenerated, DeviceName, AccountName, InitiatingProcessFileName, InitiatingProcessFolderPath, InitiatingProcessCommandLine, FileName, ProcessCommandLine, InitiatingProcessAccountName
+
+==============================================================
+Process Injection - Notepad.exe Spawned with SYSTEM Privileges
+==============================================================
+// Description:
+// This query looks for notepad.exe spawned as SYSTEM. The SYSTEM integrity level suggests the system services/process and system level privilege. Notepad.exe should come under Medium which is default for most processes because it is for authenticated users. But in this case the threat actor spawns notepad.exe on a SYSTEM level. This may indicate a malicious application has injected into the notepad.exe process. 
+//
+// Action on alert:
+// Check the folder path of notepad.exe and the initiating process. Look whether it is legitimate process, if yes then look at the process chain see if the initiating process is running with system privileges (Certain administrative tools or scripts may intentionally run applications with elevated privileges for testing or management purposes), in that case, allowlist.
+//
+// Source:
+// https://www.microsoft.com/en-us/security/blog/2025/04/08/exploitation-of-clfs-zero-day-leads-to-ransomware-activity/
+//    
+// Creator:
+// Shikha Sangwan
+//
+// Query:
+DeviceProcessEvents
+| where FileName contains "notepad.exe"
+| where ProcessIntegrityLevel has 'system'
+| project TimeGenerated, AccountDomain, DeviceName, AccountUpn, ProcessIntegrityLevel, FileName, FolderPath
